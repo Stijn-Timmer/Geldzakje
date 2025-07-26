@@ -1,0 +1,35 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/lib/server/prisma/generated"
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Transaction model to track all money movements
+model Transaction {
+  id          Int             @id @default(autoincrement())
+  type        TransactionType
+  amount      Float             
+  description String?
+  invoiceId   String?         // S3 reference for outgoing transactions
+  createdAt   DateTime        @default(now())
+
+  @@index([createdAt])
+  @@index([type])
+}
+
+// Enum for transaction types
+enum TransactionType {
+  INCOMING  // Increases balance
+  OUTGOING  // Decreases balance (may have invoiceId)
+}

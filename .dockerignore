@@ -1,0 +1,25 @@
+# Git and OS files
+.git
+.gitignore
+.DS_Store
+
+# Node dependencies (these are handled inside the container)
+node_modules
+
+# SvelteKit build artifacts and cache
+.svelte-kit
+build
+
+# IDE and environment files
+.idea
+.vscode
+*.env
+*.env.*
+!*.env.example
+
+# Logs and temp files
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+**/generated
