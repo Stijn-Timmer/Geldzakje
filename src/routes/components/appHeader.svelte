@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { page } from '$app/state';
+	import { Button } from '$lib/components/ui/button';
 	import { PiggyBank } from '@lucide/svelte';
 </script>
 
@@ -8,5 +10,9 @@
 		<PiggyBank class="stroke-primary" />
 		<h1 class="font-pixelify text-2xl">Geldzakje</h1>
 	</div>
-	<div></div>
+	<div>
+		{#if page.url.pathname !== "/"}
+			<Button variant="destructive" href="/">Terug</Button>
+		{/if}
+	</div>
 </div>

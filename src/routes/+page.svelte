@@ -18,7 +18,10 @@
 	<!-- Header met balans en nieuwe transactie knop -->
 	<div class="flex items-start justify-between gap-4 p-4">
 		<div class="flex-1">
-			<TransactionBalance transactions={data.transactions} />
+			{#key data.transactions.length}
+				<!-- Render de huidige balans -->
+				<TransactionBalance transactions={data.transactions} />
+			{/key}
 		</div>
 	</div>
 	<div class="flex items-center justify-between p-4">

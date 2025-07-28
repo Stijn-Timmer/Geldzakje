@@ -2,6 +2,7 @@
 	import * as Table from '$lib/components/ui/table/index.js';
 	import type { Transaction } from '$lib/server/prisma/generated/client';
 	import { ArrowBigDown, ArrowBigUp } from '@lucide/svelte';
+	import { File } from '@lucide/svelte';
 
 	interface Props {
 		transactions: Transaction[];
@@ -54,12 +55,9 @@
 					<Table.Cell>
 						{#if transaction.invoiceId}
 							<a
-								href={`/documents/${transaction.invoiceId}`}
-								target="_blank"
-								rel="noopener noreferrer"
-								class="text-blue-600 underline hover:text-blue-800"
-							>
-								📄 Bekijk factuur
+								href={`/documents/${transaction.invoiceId}`} class="flex gap-2 items-center">
+								<File class="text-primary w-4 h-4"/>
+								Bekijken
 							</a>
 						{:else}
 							<span class="text-gray-500">Geen factuur</span>

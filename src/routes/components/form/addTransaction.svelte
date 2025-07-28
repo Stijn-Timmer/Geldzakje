@@ -13,7 +13,9 @@
     import * as Popover from "$lib/components/ui/popover/index.js";
     import { Button } from "$lib/components/ui/button/index.js";
     import ChevronDownIcon from "@lucide/svelte/icons/chevron-down";
-    import { getLocalTimeZone, today, type DateValue } from "@internationalized/date";
+    import { CalendarDate, getLocalTimeZone, today, type DateValue, DateFormatter } from "@internationalized/date"; // [1]
+	import { toast } from 'svelte-sonner';
+	import { invalidateAll } from '$app/navigation';
 
     // Props: Pre-validated form data van de server
     const { transactionForm }: { transactionForm: SuperValidated<Infer<TransactionSchema>> } =
@@ -22,28 +24,35 @@
     // Superforms setup met client-side validatie
     const form = superForm(transactionForm, {
         validators: zod4Client(transactionSchema),
+        dataType: 'json',
+        onResult: async ({ result }) => {
+            if (result.type === 'success') {
+                openDialog = false;
+                await invalidateAll()
+                toast.success('Transactie succesvol toegevoegd!');
+            } 
+        }
     });
+
+    let openDialog: boolean = $state(false);
 
     const { form: formData, enhance } = form;
 
-    // Local state voor calendar popup
+    // Local state for calendar popup
     let isCalendarOpen: boolean = $state(false);
 
-    /**
-     * Tijdelijke datum waarde voor de calendar component
-     * Converteert tussen JavaScript Date en CalendarDate formaten
-     */
-    let tempDateValue: DateValue | undefined = $state(
-        $formData.date ? today(getLocalTimeZone()).set(
-            {
-                year: $formData.date.getFullYear(),
-                month: $formData.date.getMonth() + 1, // JS Date maanden zijn 0-indexed, CalendarDate 1-indexed
-                day: $formData.date.getDate()
-            }
-        ) : undefined
-    );
+    // DateFormatter instance for displaying the date in a user-friendly format within the button trigger.
+    const df = new DateFormatter("nl-NL", { dateStyle: "long" }); // [1]
 
-    let open = $state(false);
+    // Svelte state for the Calendar component's bind:value.
+    // This variable holds the CalendarDate object for the UI component.
+    // It is initialized from $formData.date (a native Date) by converting it to CalendarDate,
+    // ensuring the date picker displays any pre-filled value from the form data.
+    let selectedCalendarDate: DateValue | undefined = $state(
+        $formData.date instanceof Date
+           ? new CalendarDate($formData.date.getFullYear(), $formData.date.getMonth() + 1, $formData.date.getDate())
+            : undefined
+    ); // [1]
 
     const fileSelection = (event: Event) => {
         const input = event.target as HTMLInputElement;
@@ -54,32 +63,26 @@
         }
     };
 
-    // Handler for when the calendar value changes
-    const handleDateChange = (dateValue: DateValue | undefined) => {
-        tempDateValue = dateValue; // Update the temporary state for the Calendar component
-
-        if (dateValue) {
-            $formData.date = new Date(dateValue.toString());
-		}
-
-        isCalendarOpen = false; // Close the popover after selection
-    };
-
-    // Reset the form data when the dialog is closed
+    // Reset the form data and calendar value when the dialog is closed,
+    // and initialize calendar value when dialog opens.
     const onOpenChange = async (state: boolean) => {
-        if (state) return;
-        form.reset();
-        // Also reset tempDateValue when the dialog closes
-        tempDateValue = undefined;
+        if (!state) { // Dialog is closing
+            form.reset();
+            selectedCalendarDate = undefined; // Clear calendar value on close
+        } else { // Dialog is opening
+            // Initialize calendar value from form data if it exists
+            selectedCalendarDate = $formData.date instanceof Date
+               ? new CalendarDate($formData.date.getFullYear(), $formData.date.getMonth() + 1, $formData.date.getDate())
+                : undefined; // [1]
+        }
     };
-
 </script>
 
-<AlertDialog.Root onOpenChange={onOpenChange}>
+<AlertDialog.Root bind:open={openDialog} onOpenChange={onOpenChange}>
     <AlertDialog.Trigger class={buttonVariants({ variant: 'default' })}
         >Nieuwe Transactie</AlertDialog.Trigger
     >
-    <AlertDialog.Content class="transition-colors duration-300 ease-in-out {$formData.type === 'INCOMING' ? 'border-lime-500' : 'border-rose-500'}">
+    <AlertDialog.Content class="transition-colors duration-300 ease-in-out {$formData.type === 'INCOMING'? 'border-lime-500' : 'border-rose-500'}">
         <form method="POST" use:enhance enctype="multipart/form-data">
             <AlertDialog.Header>
                 <AlertDialog.Title>Nieuwe Transactie</AlertDialog.Title>
@@ -93,10 +96,10 @@
                                 <Select.Trigger {...props} class="w-40">
                                     <ArrowBigDown
                                         class="transition-all duration-300 ease-in-out {$formData.type === 'INCOMING'
-                                            ? 'stroke-lime-500'
+                                           ? 'stroke-lime-500'
                                             : 'rotate-180 stroke-rose-500'}"
                                     />
-                                    <span class="ml-2">{$formData.type === 'INCOMING' ? 'Inkomend' : 'Uitgaand'}</span
+                                    <span class="ml-2">{$formData.type === 'INCOMING'? 'Inkomend' : 'Uitgaand'}</span
                                     >
                                 </Select.Trigger>
                                 <Select.Content>
@@ -123,10 +126,10 @@
                             <Input
                                 autofocus={true}
                                 type="number"
-                                class="w-28 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                                class="w-28 [appearance:textfield][&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
                                 min="0"
                                 step="0.01"
-								bind:value={$formData.amount}
+                                bind:value={$formData.amount}
                                 {...props}
                             />
                         {/snippet}
@@ -143,23 +146,32 @@
                             <Popover.Root bind:open={isCalendarOpen}>
                                 <Popover.Trigger id="date">
                                     <Button
-                                        {...props}
                                         variant="outline"
                                         class="w-40 justify-between font-normal"
+                                        {...props}
                                     >
-                                        {$formData.date
-                                            ? $formData.date.toLocaleDateString()
+                                        {selectedCalendarDate
+                                           ? df.format(selectedCalendarDate.toDate(getLocalTimeZone())) // [1]
                                             : 'Selecteer datum'}
                                         <ChevronDownIcon class="ml-2 h-4 w-4" />
                                     </Button>
                                 </Popover.Trigger>
 
                                 <Popover.Content class="w-auto overflow-hidden p-0" align="start">
-                                <Calendar
-                                    type="single"
-                                    bind:value={tempDateValue} captionLayout="dropdown"
-                                    onValueChange={handleDateChange} maxValue={today(getLocalTimeZone())}
-                                />
+                                    <Calendar
+                                        type="single"
+                                        bind:value={selectedCalendarDate}
+                                        onValueChange={(v) => {
+                                            if (v) {
+                                                // Crucial conversion: CalendarDate (v) is converted to a native Date object.
+                                                $formData.date = v.toDate(getLocalTimeZone()); // [1, 4, 5]
+                                            } 
+                                            isCalendarOpen = false; // Close popover on selection for better UX
+                                        }}
+                                        captionLayout="dropdown"
+                                        minValue={new CalendarDate(1900, 1, 1)} 
+                                        maxValue={today(getLocalTimeZone())}
+                                    />
                                 </Popover.Content>
                             </Popover.Root>
                         {/snippet}

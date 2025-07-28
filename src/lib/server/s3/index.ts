@@ -10,7 +10,7 @@ import { Storage } from '@google-cloud/storage';
  * of service account keys moeten worden geladen voor beveiliging.
  */
 const storage = new Storage({
-	
+
 });
 
 export default storage;
