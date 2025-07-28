@@ -23,7 +23,7 @@ export const load: PageServerLoad = async () => {
 			transactions
 		};
 	} catch (err) {
-		logger.error('Fout bij laden van transacties:', err);
+		logger.error(err);
 		throw error(500, 'Kan transactiegegevens niet laden. Probeer het later opnieuw.');
 	}
 };
