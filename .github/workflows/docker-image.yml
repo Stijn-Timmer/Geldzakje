@@ -54,7 +54,8 @@ jobs:
       - name: Generate artifact attestation
         uses: actions/attest-build-provenance@v2
         with:
-          # Corrected to use the actual image name from the metadata step
-          subject-name: index.docker.io/${{ steps.meta.outputs.tags }}
+          # Corrected to use the repository name without tags.
+          # The digest is used to identify the specific image version.
+          subject-name: index.docker.io/stijntimmer99/geldzakje
           subject-digest: ${{ steps.push.outputs.digest }}
           push-to-registry: true
