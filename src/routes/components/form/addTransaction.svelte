@@ -138,8 +138,8 @@
                         <Form.FieldErrors />
                     </div>
                 </Form.Field>
-
-                <Form.Field {form} name="date">
+            </div>
+                            <Form.Field {form} name="date">
                     <Form.Control>
                         {#snippet children({ props })}
                             <Form.Label for="date">Datum</Form.Label>
@@ -147,7 +147,7 @@
                                 <Popover.Trigger id="date">
                                     <Button
                                         variant="outline"
-                                        class="w-40 justify-between font-normal"
+                                        class="w-full justify-between font-normal"
                                         {...props}
                                     >
                                         {selectedCalendarDate
@@ -180,7 +180,6 @@
                         <Form.FieldErrors />
                     </div>
                 </Form.Field>
-            </div>
             <Form.Field {form} name="description">
                 <Form.Control>
                     {#snippet children({ props })}
