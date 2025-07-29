@@ -9,8 +9,6 @@ import { Storage } from '@google-cloud/storage';
  * WAARSCHUWING: In productie zouden credentials via environment variables
  * of service account keys moeten worden geladen voor beveiliging.
  */
-const storage = new Storage({
-
-});
+const storage = new Storage();
 
 export default storage;
