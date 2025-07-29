@@ -1,8 +1,10 @@
 <script lang="ts">
 	import * as Table from '$lib/components/ui/table/index.js';
 	import type { Transaction } from '$lib/server/prisma/generated/client';
-	import { ArrowBigDown, ArrowBigUp } from '@lucide/svelte';
+	import { ArrowBigDown, ArrowBigUp, Trash } from '@lucide/svelte';
 	import { File } from '@lucide/svelte';
+	import DeleteTransaction from './form/deleteTransaction.svelte';
+
 
 	interface Props {
 		transactions: Transaction[];
@@ -35,7 +37,8 @@
 				<Table.Head>Hoeveel</Table.Head>
 				<Table.Head>Beschrijving</Table.Head>
 				<Table.Head>Factuur</Table.Head>
-				<Table.Head class="text-right">Datum</Table.Head>
+				<Table.Head>Datum</Table.Head>
+				<Table.Head class="text-right">Acties</Table.Head>
 			</Table.Row>
 		</Table.Header>
 		<Table.Body>
@@ -63,8 +66,11 @@
 							<span class="text-gray-500">Geen factuur</span>
 						{/if}
 					</Table.Cell>
-					<Table.Cell class="text-right">
+					<Table.Cell>
 						{formatDate(transaction.createdAt)}
+					</Table.Cell>
+					<Table.Cell class="text-right">
+						<DeleteTransaction transactionId={transaction.id} />
 					</Table.Cell>
 				</Table.Row>
 			{/each}

@@ -3,7 +3,7 @@
     import * as AlertDialog from '$lib/components/ui/alert-dialog';
     import * as Select from '$lib/components/ui/select/index.js';
     import { Textarea } from '$lib/components/ui/textarea';
-    import { transactionSchema, type TransactionSchema } from './schema';
+    import { transactionCreateSchema, type TransactionCreateSchema } from './schema';
     import { type SuperValidated, type Infer, superForm } from 'sveltekit-superforms';
     import { zod4Client } from 'sveltekit-superforms/adapters';
     import { buttonVariants } from '$lib/components/ui/button';
@@ -18,12 +18,12 @@
 	import { invalidateAll } from '$app/navigation';
 
     // Props: Pre-validated form data van de server
-    const { transactionForm }: { transactionForm: SuperValidated<Infer<TransactionSchema>> } =
+    const { transactionForm }: { transactionForm: SuperValidated<Infer<TransactionCreateSchema>> } =
         $props();
 
     // Superforms setup met client-side validatie
     const form = superForm(transactionForm, {
-        validators: zod4Client(transactionSchema),
+        validators: zod4Client(transactionCreateSchema),
         dataType: 'json',
         onResult: async ({ result }) => {
             if (result.type === 'success') {
@@ -83,7 +83,7 @@
         >Nieuwe Transactie</AlertDialog.Trigger
     >
     <AlertDialog.Content class="transition-colors duration-300 ease-in-out {$formData.type === 'INCOMING'? 'border-lime-500' : 'border-rose-500'}">
-        <form method="POST" use:enhance enctype="multipart/form-data">
+        <form method="POST" action="?/create" use:enhance enctype="multipart/form-data">
             <AlertDialog.Header>
                 <AlertDialog.Title>Nieuwe Transactie</AlertDialog.Title>
             </AlertDialog.Header>

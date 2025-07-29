@@ -3,7 +3,7 @@ import { error } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 import logger from '$lib/server/logger';
 import { superValidate } from 'sveltekit-superforms';
-import { transactionSchema } from './components/form/schema';
+import { transactionCreateSchema, transactionDeleteSchema, transactionSchema } from './components/form/schema';
 import { zod4 } from 'sveltekit-superforms/adapters';
 import { randomUUID } from 'node:crypto';
 import storage from '$lib/server/s3';
@@ -31,10 +31,10 @@ export const load: PageServerLoad = async () => {
 };
 
 export const actions = {
-	default: async ({ request }) => {
+	create: async ({ request }) => {
 		try {
 			// Verwerk het formulier met de transactie data
-			const form = await superValidate(request, zod4(transactionSchema));
+			const form = await superValidate(request, zod4(transactionCreateSchema));
 
 			if (!form.valid) {
 				return { form };
@@ -86,6 +86,26 @@ export const actions = {
 				form: await superValidate(request, zod4(transactionSchema)),
 				error: 'Er is een fout opgetreden bij het opslaan van de transactie. Probeer het opnieuw.'
 			};
+		}
+	},
+	deleteTransaction: async ({ request }: { request: Request }) => {
+		try {
+			const form = await superValidate(request, zod4(transactionDeleteSchema));
+
+			if (!form.valid) {
+				return { form };
+			}
+
+			// Verwijder de transactie uit de database
+			await prisma.transaction.delete({
+				where: { id: form.data.id }
+			});
+
+			logger.info(`Transactie ${form.data.id} succesvol verwijderd`);
+			return { success: true };
+		} catch (err) {
+			logger.error('Fout bij verwijderen van transactie:', err);
+			return { error: 'Fout bij verwijderen van transactie. Probeer het opnieuw.' };
+		}
 	}
-}
-}
+};

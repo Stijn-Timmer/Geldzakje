@@ -1,4 +1,4 @@
-import { date, z } from 'zod';
+import { z } from 'zod';
 
 /**
  * Zod validatie schema voor transactie formulieren
@@ -11,6 +11,7 @@ import { date, z } from 'zod';
  * - Factuur: Optioneel PDF bestand
  */
 export const transactionSchema = z.object({
+	id: z.number(),
 	type: z.enum(['INCOMING', 'OUTGOING']),
 	amount: z.number().min(0, 'Bedrag moet groter dan of gelijk aan 0 zijn'),
 	description: z.string().max(255, 'Omschrijving mag maximaal 255 tekens bevatten'),
@@ -20,4 +21,15 @@ export const transactionSchema = z.object({
 	invoiceFile: z.file('application/pdf').optional()
 });
 
-export type TransactionSchema = typeof transactionSchema;
+export const transactionCreateSchema = transactionSchema.omit({ id: true });
+
+export const transactionDeleteSchema = transactionSchema.pick({ id: true });
+
+/**
+ * Type definities voor transactie schema's
+ * 
+ * Deze types worden gebruikt in de Superforms validatie en acties
+ */
+export type TransactionCreateSchema = typeof transactionCreateSchema
+export type TransactionDeleteSchema = typeof transactionDeleteSchema
+export type TransactionSchema = typeof transactionSchema
